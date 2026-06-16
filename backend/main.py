@@ -2,7 +2,7 @@
 
 from typing import Annotated
 
-from fastapi import Depends, FastAPI, HTTPException
+from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import Integer, func
 from sqlalchemy.orm import Session
@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 from database import Base, engine, get_db
 from models import Material, StreetSign
 from schemas import (
+    CityDirectoryResponse,
     CityStats,
     MaterialCreate,
     MaterialResponse,
@@ -52,13 +53,15 @@ def health_check() -> dict[str, str]:
 
 
 @app.get("/api/signs", response_model=list[StreetSignResponse])
-def list_signs(db: DbSession) -> list[StreetSign]:
+def list_signs(
+    db: DbSession,
+    city: str | None = Query(None, description="按城市名称筛选"),
+) -> list[StreetSign]:
     """获取全部路名牌记录，按城市、ID 排序。"""
-    return (
-        db.query(StreetSign)
-        .order_by(StreetSign.city.asc(), StreetSign.id.asc())
-        .all()
-    )
+    query = db.query(StreetSign)
+    if city:
+        query = query.filter(StreetSign.city == city)
+    return query.order_by(StreetSign.city.asc(), StreetSign.id.asc()).all()
 
 
 @app.get("/api/signs/{sign_id}", response_model=StreetSignResponse)
@@ -176,4 +179,31 @@ def get_stats_overview(db: DbSession) -> StatsOverview:
         total_unified=total_unified,
         overall_unified_rate=overall_unified_rate,
         city_stats=city_stats,
+    )
+
+
+@app.get("/api/cities", response_model=CityDirectoryResponse)
+def get_city_directory(db: DbSession) -> CityDirectoryResponse:
+    """获取城市目录：返回全部城市名称及各自记录数量。"""
+    total_records = db.query(func.count(StreetSign.id)).scalar() or 0
+
+    city_counts_query = (
+        db.query(
+            StreetSign.city,
+            func.count(StreetSign.id).label("record_count"),
+        )
+        .group_by(StreetSign.city)
+        .order_by(StreetSign.city.asc())
+        .all()
+    )
+
+    cities = [
+        {"city": city, "record_count": count}
+        for city, count in city_counts_query
+    ]
+
+    return CityDirectoryResponse(
+        total_cities=len(cities),
+        total_records=total_records,
+        cities=cities,
     )

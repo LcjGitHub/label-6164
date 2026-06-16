@@ -38,3 +38,16 @@ export interface StatsOverview {
   overall_unified_rate: number;
   city_stats: CityStats[];
 }
+
+/** 城市目录项 */
+export interface CityDirectoryItem {
+  city: string;
+  record_count: number;
+}
+
+/** 城市目录响应 */
+export interface CityDirectoryResponse {
+  total_cities: number;
+  total_records: number;
+  cities: CityDirectoryItem[];
+}

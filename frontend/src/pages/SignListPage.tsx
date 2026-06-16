@@ -1,11 +1,19 @@
-import { Button, Space, Table, Tag, message } from 'antd';
+import { Button, Space, Table, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { CloseOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { fetchSigns } from '../api/client';
 import SignDetailDrawer from '../components/SignDetailDrawer';
 import SignFormModal from '../components/SignFormModal';
 import type { StreetSign } from '../types';
+
+const { Text } = Typography;
+
+interface SignListPageProps {
+  filterCity?: string;
+  onClearFilter?: () => void;
+}
 
 interface GroupedRow extends StreetSign {
   cityRowSpan: number;
@@ -43,7 +51,7 @@ function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
 /**
  * 路名牌列表页：按城市分组的表格 + 详情抽屉 + 基础 CRUD。
  */
-export default function SignListPage() {
+export default function SignListPage({ filterCity, onClearFilter }: SignListPageProps) {
   const [signs, setSigns] = useState<StreetSign[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSign, setSelectedSign] = useState<StreetSign | null>(null);
@@ -54,14 +62,14 @@ export default function SignListPage() {
   const loadSigns = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchSigns();
+      const data = await fetchSigns(filterCity);
       setSigns(data);
     } catch {
       message.error('加载数据失败，请确认后端已启动');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [filterCity]);
 
   useEffect(() => {
     loadSigns();
@@ -153,16 +161,27 @@ export default function SignListPage() {
 
   return (
     <>
-      <Space style={{ marginBottom: 16 }} wrap>
+      <Space style={{ marginBottom: 16 }} wrap align="center">
         <Button type="primary" onClick={openCreate}>
           新增记录
         </Button>
         <Button onClick={loadSigns} loading={loading}>
           刷新
         </Button>
-        <span style={{ color: 'rgba(0,0,0,0.45)' }}>
+        {filterCity && (
+          <Tag
+            color="blue"
+            closable
+            closeIcon={<CloseOutlined />}
+            onClose={onClearFilter}
+            style={{ marginInlineEnd: 0 }}
+          >
+            城市筛选：{filterCity}
+          </Tag>
+        )}
+        <Text type="secondary">
           共 {cityCount} 个城市 · {signs.length} 条记录
-        </span>
+        </Text>
       </Space>
 
       <Table<GroupedRow>

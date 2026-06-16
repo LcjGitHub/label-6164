@@ -65,3 +65,18 @@ class MaterialResponse(MaterialBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class CityDirectoryItem(BaseModel):
+    """城市目录项。"""
+
+    city: str
+    record_count: int
+
+
+class CityDirectoryResponse(BaseModel):
+    """城市目录响应。"""
+
+    total_cities: int
+    total_records: int
+    cities: list[CityDirectoryItem]

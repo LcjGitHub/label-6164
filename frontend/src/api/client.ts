@@ -1,15 +1,23 @@
 import axios from 'axios';
 
-import type { Material, MaterialPayload, StatsOverview, StreetSign, StreetSignPayload } from '../types';
+import type {
+  CityDirectoryResponse,
+  Material,
+  MaterialPayload,
+  StatsOverview,
+  StreetSign,
+  StreetSignPayload,
+} from '../types';
 
 const client = axios.create({
   baseURL: '/api',
   timeout: 10000,
 });
 
-/** 获取全部路名牌记录 */
-export async function fetchSigns(): Promise<StreetSign[]> {
-  const { data } = await client.get<StreetSign[]>('/signs');
+/** 获取全部路名牌记录，可按城市筛选 */
+export async function fetchSigns(city?: string): Promise<StreetSign[]> {
+  const params = city ? { city } : undefined;
+  const { data } = await client.get<StreetSign[]>('/signs', { params });
   return data;
 }
 
@@ -66,5 +74,11 @@ export async function fetchMaterials(): Promise<Material[]> {
 /** 新增材质词典记录 */
 export async function createMaterial(payload: MaterialPayload): Promise<Material> {
   const { data } = await client.post<Material>('/materials', payload);
+  return data;
+}
+
+/** 获取城市目录 */
+export async function fetchCityDirectory(): Promise<CityDirectoryResponse> {
+  const { data } = await client.get<CityDirectoryResponse>('/cities');
   return data;
 }
