@@ -76,7 +76,7 @@ export default function SignFormModal({
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
         <div style={{ marginBottom: 20 }}>
           <div style={{ marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#666' }}>
-            实时预览
+            路名牌样例预览
           </div>
           <StreetSignPreview
             backgroundColor={previewBgColor}

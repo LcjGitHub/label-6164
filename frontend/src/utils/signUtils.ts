@@ -99,32 +99,57 @@ export function getContrastColor(bgColor: string): string {
   return luminance > 0.5 ? '#212121' : '#FFFFFF';
 }
 
-const commonStreetSuffixes = ['路', '街', '道', '巷', '胡同', '大街', '大道', '弄', '里'];
+const streetSuffixes = ['大街', '大道', '胡同', '路', '街', '道', '巷', '弄', '里'];
+
+const noisePrefixes = ['用于', '常见于', '多见于', '适用于', '主要用于', '一般用于', '通常用于'];
+
+function stripNoisePrefix(text: string): string {
+  let result = text;
+  for (const prefix of noisePrefixes) {
+    if (result.startsWith(prefix)) {
+      result = result.slice(prefix.length);
+      break;
+    }
+  }
+  return result.trimStart();
+}
 
 export function extractStreetName(fontDescription: string, city: string): string {
   if (fontDescription && fontDescription.trim()) {
-    const lines = fontDescription.split(/[，。；\n、,;]/).filter((s) => s.trim());
-    for (const line of lines) {
-      const trimmed = line.trim();
-      if (trimmed.length >= 2 && trimmed.length <= 10) {
-        for (const suffix of commonStreetSuffixes) {
-          if (trimmed.includes(suffix)) {
-            return trimmed;
-          }
+    const cleaned = stripNoisePrefix(fontDescription.trim());
+    const segments = cleaned.split(/[，。；\n、,;\s]+/).filter((s) => s.trim());
+
+    for (const suffix of streetSuffixes) {
+      for (const seg of segments) {
+        const trimmed = seg.trim();
+        const idx = trimmed.lastIndexOf(suffix);
+        if (idx === -1) continue;
+        const end = idx + suffix.length;
+        let start = idx;
+        while (start > 0 && /[\u4e00-\u9fff]/.test(trimmed[start - 1])) {
+          start--;
+        }
+        const name = trimmed.slice(start, end);
+        if (name.length >= 2 && name.length <= 10) {
+          return name;
         }
       }
     }
-    if (lines.length > 0) {
-      const firstLine = lines[0].trim();
-      if (firstLine.length <= 12) {
-        return firstLine;
+
+    for (const suffix of streetSuffixes) {
+      const regex = new RegExp(`[\u4e00-\u9fff]{1,6}${suffix}`);
+      const match = cleaned.match(regex);
+      if (match) {
+        const name = match[0];
+        if (name.length >= 2 && name.length <= 10) {
+          return name;
+        }
       }
-      return firstLine.slice(0, 10) + '...';
     }
   }
 
-  if (city) {
-    return `${city}路`;
+  if (city && city.trim()) {
+    return `${city.trim()}路`;
   }
 
   return '示例路';
