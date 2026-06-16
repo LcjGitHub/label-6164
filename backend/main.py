@@ -19,7 +19,7 @@ from schemas import (
     StreetSignResponse,
     StreetSignUpdate,
 )
-from seed import seed_database
+from seed import backfill_discovery_decade, seed_database
 
 Base.metadata.create_all(bind=engine)
 
@@ -44,10 +44,11 @@ DbSession = Annotated[Session, Depends(get_db)]
 
 @app.on_event("startup")
 def on_startup() -> None:
-    """应用启动时写入种子数据。"""
+    """应用启动时写入种子数据并回填发现年代。"""
     db = next(get_db())
     try:
         seed_database(db)
+        backfill_discovery_decade(db)
     finally:
         db.close()
 

@@ -152,9 +152,12 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
       title: '发现年代',
       dataIndex: 'discovery_decade',
       width: 130,
-      render: (value: string | null) => (
-        <Tag color="purple">{value || '-'}</Tag>
-      ),
+      render: (value: string | null) =>
+        value ? (
+          <Tag color="purple">{value}</Tag>
+        ) : (
+          <span style={{ color: '#999' }}>-</span>
+        ),
     },
     {
       title: '统一规范',

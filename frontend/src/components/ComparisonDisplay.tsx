@@ -39,6 +39,16 @@ const FIELD_CONFIGS: FieldConfig[] = [
   },
   { key: 'material', label: '材质' },
   {
+    key: 'discovery_decade',
+    label: '发现年代',
+    render: (value) =>
+      value ? (
+        <Tag color="purple">{value as string}</Tag>
+      ) : (
+        <span style={{ color: '#999' }}>-</span>
+      ),
+  },
+  {
     key: 'is_unified_standard',
     label: '是否统一规范',
     render: (value) => (

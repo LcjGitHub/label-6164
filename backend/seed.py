@@ -75,11 +75,26 @@ MATERIAL_SEED_DATA: list[dict] = [
 ]
 
 
+BACKFILL_MAP: dict[tuple[str, str], str] = {
+    (item["city"], item["material"]): item["discovery_decade"]
+    for item in SEED_DATA
+    if item.get("discovery_decade")
+}
+
+
+def backfill_discovery_decade(db: Session) -> None:
+    """为已有且 discovery_decade 为空的记录按城市+材质匹配回填年代。"""
+    signs = db.query(StreetSign).filter(StreetSign.discovery_decade.is_(None)).all()
+    for sign in signs:
+        decade = BACKFILL_MAP.get((sign.city, sign.material))
+        if decade:
+            sign.discovery_decade = decade
+    if signs:
+        db.commit()
+
+
 def seed_database(db: Session) -> None:
-    """
-     * 若表为空则写入种子数据。
-     * @param {Session} db 数据库会话
-     """
+    """若表为空则写入种子数据。"""
     if db.query(Material).count() == 0:
         for item in MATERIAL_SEED_DATA:
             db.add(Material(**item))
