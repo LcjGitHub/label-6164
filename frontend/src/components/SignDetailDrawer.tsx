@@ -5,6 +5,7 @@ import {
   Popconfirm,
   Space,
   Tag,
+  Typography,
   message,
 } from 'antd';
 import dayjs from 'dayjs';
@@ -13,23 +14,33 @@ import { deleteSign } from '../api/client';
 import type { StreetSign } from '../types';
 import StreetSignPreview from './StreetSignPreview';
 
+const { Text } = Typography;
+
 interface SignDetailDrawerProps {
   open: boolean;
   sign: StreetSign | null;
+  signList: StreetSign[];
+  currentIndex: number;
   onClose: () => void;
   onEdit: (sign: StreetSign) => void;
   onDeleted: () => void;
+  onPrev: () => void;
+  onNext: () => void;
 }
 
 /**
- * 路名牌详情抽屉，展示完整字段并支持编辑/删除。
+ * 路名牌详情抽屉，展示完整字段并支持编辑/删除、上下条切换。
  */
 export default function SignDetailDrawer({
   open,
   sign,
+  signList,
+  currentIndex,
   onClose,
   onEdit,
   onDeleted,
+  onPrev,
+  onNext,
 }: SignDetailDrawerProps) {
   const handleDelete = async () => {
     if (!sign) return;
@@ -42,6 +53,10 @@ export default function SignDetailDrawer({
       message.error('删除失败');
     }
   };
+
+  const isFirst = currentIndex <= 0;
+  const isLast = signList.length === 0 || currentIndex >= signList.length - 1;
+  const positionText = signList.length > 0 ? `${currentIndex + 1} / ${signList.length}` : '';
 
   return (
     <Drawer
@@ -58,6 +73,21 @@ export default function SignDetailDrawer({
             <Popconfirm title="确定删除此记录？" onConfirm={handleDelete}>
               <Button danger>删除</Button>
             </Popconfirm>
+          </Space>
+        ) : null
+      }
+      footer={
+        sign && signList.length > 0 ? (
+          <Space style={{ justifyContent: 'space-between', width: '100%' }}>
+            <Space>
+              <Button onClick={onPrev} disabled={isFirst}>
+                上一条
+              </Button>
+              <Button onClick={onNext} disabled={isLast}>
+                下一条
+              </Button>
+            </Space>
+            <Text type="secondary">{positionText}</Text>
           </Space>
         ) : null
       }

@@ -47,6 +47,7 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
   const [signs, setSigns] = useState<StreetSign[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSign, setSelectedSign] = useState<StreetSign | null>(null);
+  const [currentIndex, setCurrentIndex] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingSign, setEditingSign] = useState<StreetSign | null>(null);
@@ -154,6 +155,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
           type="link"
           size="small"
           onClick={() => {
+            const index = tableData.findIndex((item) => item.id === record.id);
+            setCurrentIndex(index >= 0 ? index : 0);
             setSelectedSign(record);
             setDrawerOpen(true);
           }}
@@ -172,6 +175,20 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
   const openEdit = (sign: StreetSign) => {
     setEditingSign(sign);
     setFormOpen(true);
+  };
+
+  const handlePrev = () => {
+    if (currentIndex <= 0) return;
+    const newIndex = currentIndex - 1;
+    setCurrentIndex(newIndex);
+    setSelectedSign(tableData[newIndex]);
+  };
+
+  const handleNext = () => {
+    if (currentIndex >= tableData.length - 1) return;
+    const newIndex = currentIndex + 1;
+    setCurrentIndex(newIndex);
+    setSelectedSign(tableData[newIndex]);
   };
 
   return (
@@ -228,12 +245,16 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
       <SignDetailDrawer
         open={drawerOpen}
         sign={selectedSign}
+        signList={tableData}
+        currentIndex={currentIndex}
         onClose={() => setDrawerOpen(false)}
         onEdit={(sign) => {
           setDrawerOpen(false);
           openEdit(sign);
         }}
         onDeleted={loadSigns}
+        onPrev={handlePrev}
+        onNext={handleNext}
       />
 
       <SignFormModal
