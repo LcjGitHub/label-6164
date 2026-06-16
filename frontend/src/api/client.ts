@@ -14,9 +14,11 @@ const client = axios.create({
   timeout: 10000,
 });
 
-/** 获取全部路名牌记录，可按城市筛选 */
-export async function fetchSigns(city?: string): Promise<StreetSign[]> {
-  const params = city ? { city } : undefined;
+/** 获取全部路名牌记录，可按城市和材质筛选 */
+export async function fetchSigns(city?: string, material?: string): Promise<StreetSign[]> {
+  const params: Record<string, string> = {};
+  if (city) params.city = city;
+  if (material) params.material = material;
   const { data } = await client.get<StreetSign[]>('/signs', { params });
   return data;
 }

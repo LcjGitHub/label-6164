@@ -1,27 +1,22 @@
-import { Button, Space, Table, Tag, Typography, message } from 'antd';
+import { Button, Input, Select, Space, Table, Tag, Typography, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
-import { CloseOutlined } from '@ant-design/icons';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { fetchSigns } from '../api/client';
+import { fetchCityDirectory, fetchSigns } from '../api/client';
 import SignDetailDrawer from '../components/SignDetailDrawer';
 import SignFormModal from '../components/SignFormModal';
-import type { StreetSign } from '../types';
+import type { CityDirectoryItem, StreetSign } from '../types';
 
 const { Text } = Typography;
 
 interface SignListPageProps {
-  filterCity?: string;
-  onClearFilter?: () => void;
+  initialCity?: string;
 }
 
 interface GroupedRow extends StreetSign {
   cityRowSpan: number;
 }
 
-/**
- * 计算城市列 rowSpan，实现按城市分组展示。
- */
 function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
   const rows: GroupedRow[] = [];
   let index = 0;
@@ -48,10 +43,7 @@ function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
   return rows;
 }
 
-/**
- * 路名牌列表页：按城市分组的表格 + 详情抽屉 + 基础 CRUD。
- */
-export default function SignListPage({ filterCity, onClearFilter }: SignListPageProps) {
+export default function SignListPage({ initialCity }: SignListPageProps) {
   const [signs, setSigns] = useState<StreetSign[]>([]);
   const [loading, setLoading] = useState(false);
   const [selectedSign, setSelectedSign] = useState<StreetSign | null>(null);
@@ -59,21 +51,38 @@ export default function SignListPage({ filterCity, onClearFilter }: SignListPage
   const [formOpen, setFormOpen] = useState(false);
   const [editingSign, setEditingSign] = useState<StreetSign | null>(null);
 
+  const [filterCity, setFilterCity] = useState<string | undefined>(initialCity);
+  const [filterMaterial, setFilterMaterial] = useState<string>('');
+  const [cityOptions, setCityOptions] = useState<CityDirectoryItem[]>([]);
+
+  useEffect(() => {
+    fetchCityDirectory()
+      .then((res) => setCityOptions(res.cities))
+      .catch(() => {});
+  }, []);
+
   const loadSigns = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchSigns(filterCity);
+      const data = await fetchSigns(filterCity, filterMaterial || undefined);
       setSigns(data);
     } catch {
       message.error('加载数据失败，请确认后端已启动');
     } finally {
       setLoading(false);
     }
-  }, [filterCity]);
+  }, [filterCity, filterMaterial]);
 
   useEffect(() => {
     loadSigns();
   }, [loadSigns]);
+
+  const hasFilter = Boolean(filterCity || filterMaterial);
+
+  const clearFilters = () => {
+    setFilterCity(undefined);
+    setFilterMaterial('');
+  };
 
   const tableData = useMemo(() => buildGroupedRows(signs), [signs]);
 
@@ -168,19 +177,33 @@ export default function SignListPage({ filterCity, onClearFilter }: SignListPage
         <Button onClick={loadSigns} loading={loading}>
           刷新
         </Button>
-        {filterCity && (
-          <Tag
-            color="blue"
-            closable
-            closeIcon={<CloseOutlined />}
-            onClose={onClearFilter}
-            style={{ marginInlineEnd: 0 }}
-          >
-            城市筛选：{filterCity}
-          </Tag>
+
+        <Select
+          placeholder="选择城市"
+          allowClear
+          style={{ width: 160 }}
+          value={filterCity}
+          onChange={(value) => setFilterCity(value ?? undefined)}
+          options={cityOptions.map((c) => ({ label: `${c.city} (${c.record_count})`, value: c.city }))}
+        />
+
+        <Input.Search
+          placeholder="材质关键词"
+          allowClear
+          style={{ width: 180 }}
+          value={filterMaterial}
+          onChange={(e) => setFilterMaterial(e.target.value)}
+          onSearch={(value) => setFilterMaterial(value)}
+        />
+
+        {hasFilter && (
+          <Button size="small" onClick={clearFilters}>
+            清空筛选
+          </Button>
         )}
+
         <Text type="secondary">
-          共 {cityCount} 个城市 · {signs.length} 条记录
+          筛选结果：{signs.length} 条记录{signs.length > 0 ? ` · ${cityCount} 个城市` : ''}
         </Text>
       </Space>
 

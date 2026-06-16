@@ -13,14 +13,12 @@ type PageKey = 'list' | 'cities' | 'overview' | 'comparison';
 
 export default function App() {
   const [activePage, setActivePage] = useState<PageKey>('list');
-  const [filterCity, setFilterCity] = useState<string | undefined>(undefined);
+  const [initialCity, setInitialCity] = useState<string | undefined>(undefined);
 
   const getPageDescription = () => {
     switch (activePage) {
       case 'list':
-        return filterCity
-          ? `正在查看「${filterCity}」的路名牌记录。`
-          : '按城市浏览各地老式路名牌的字体风格、背景色与材质规范。';
+        return '按城市浏览各地老式路名牌的字体风格、背景色与材质规范。';
       case 'cities':
         return '以卡片网格浏览全部城市，点击城市卡片可查看该城市的所有路名牌记录。';
       case 'overview':
@@ -33,17 +31,13 @@ export default function App() {
   };
 
   const handleCityClick = (city: string) => {
-    setFilterCity(city);
+    setInitialCity(city);
     setActivePage('list');
-  };
-
-  const handleClearFilter = () => {
-    setFilterCity(undefined);
   };
 
   const handlePageChange = (page: PageKey) => {
     if (page !== 'list') {
-      setFilterCity(undefined);
+      setInitialCity(undefined);
     }
     setActivePage(page);
   };
@@ -51,12 +45,7 @@ export default function App() {
   const renderPage = () => {
     switch (activePage) {
       case 'list':
-        return (
-          <SignListPage
-            filterCity={filterCity}
-            onClearFilter={handleClearFilter}
-          />
-        );
+        return <SignListPage initialCity={initialCity} />;
       case 'cities':
         return <CityDirectoryPage onCityClick={handleCityClick} />;
       case 'overview':

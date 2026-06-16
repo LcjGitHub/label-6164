@@ -56,11 +56,14 @@ def health_check() -> dict[str, str]:
 def list_signs(
     db: DbSession,
     city: str | None = Query(None, description="按城市名称筛选"),
+    material: str | None = Query(None, description="按材质关键词模糊筛选"),
 ) -> list[StreetSign]:
     """获取全部路名牌记录，按城市、ID 排序。"""
     query = db.query(StreetSign)
     if city:
         query = query.filter(StreetSign.city == city)
+    if material:
+        query = query.filter(StreetSign.material.contains(material))
     return query.order_by(StreetSign.city.asc(), StreetSign.id.asc()).all()
 
 
