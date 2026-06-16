@@ -17,7 +17,7 @@ interface GroupedRow extends StreetSign {
   cityRowSpan: number;
 }
 
-function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
+function buildGroupedRows(signs: StreetSign[], firstCityContinued: boolean = false): GroupedRow[] {
   const rows: GroupedRow[] = [];
   let index = 0;
 
@@ -31,10 +31,15 @@ function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
       cursor += 1;
     }
 
+    const isFirstGroup = index === 0;
     for (let offset = 0; offset < span; offset += 1) {
       rows.push({
         ...signs[index + offset],
-        cityRowSpan: offset === 0 ? span : 0,
+        cityRowSpan: isFirstGroup && firstCityContinued
+          ? 0
+          : offset === 0
+            ? span
+            : 0,
       });
     }
     index += span;
@@ -46,14 +51,19 @@ function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
 export default function SignListPage({ initialCity }: SignListPageProps) {
   const [signs, setSigns] = useState<StreetSign[]>([]);
   const [total, setTotal] = useState(0);
+  const [totalCities, setTotalCities] = useState(0);
+  const [firstCityContinued, setFirstCityContinued] = useState(false);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [selectedSign, setSelectedSign] = useState<StreetSign | null>(null);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const [globalIndex, setGlobalIndex] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [editingSign, setEditingSign] = useState<StreetSign | null>(null);
+
+  const [allCitiesTotal, setAllCitiesTotal] = useState(0);
+  const [allRecordsTotal, setAllRecordsTotal] = useState(0);
 
   const [filterCity, setFilterCity] = useState<string | undefined>(initialCity);
   const [materialInput, setMaterialInput] = useState<string>('');
@@ -62,7 +72,11 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
 
   useEffect(() => {
     fetchCityDirectory()
-      .then((res) => setCityOptions(res.cities))
+      .then((res) => {
+        setCityOptions(res.cities);
+        setAllCitiesTotal(res.total_cities);
+        setAllRecordsTotal(res.total_records);
+      })
       .catch(() => {});
   }, []);
 
@@ -76,6 +90,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
       const data = await fetchSigns(filterCity, filterMaterial || undefined, page, pageSize);
       setSigns(data.items);
       setTotal(data.total);
+      setTotalCities(data.total_cities);
+      setFirstCityContinued(data.first_city_continued);
     } catch {
       message.error('加载数据失败，请确认后端已启动');
     } finally {
@@ -100,19 +116,21 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
     setPage(1);
   }, [filterCity, filterMaterial]);
 
-  const tableData = useMemo(() => buildGroupedRows(signs), [signs]);
+  const tableData = useMemo(
+    () => buildGroupedRows(signs, firstCityContinued),
+    [signs, firstCityContinued],
+  );
 
   useEffect(() => {
     if (!drawerOpen || !selectedSign) return;
-    const newIndex = tableData.findIndex((item) => item.id === selectedSign.id);
-    if (newIndex >= 0) {
-      setCurrentIndex(newIndex);
-    } else {
+    const idx = tableData.findIndex((item) => item.id === selectedSign.id);
+    if (idx < 0) {
       setDrawerOpen(false);
     }
-  }, [tableData]);
+  }, [tableData, drawerOpen, selectedSign]);
 
-  const displayCount = hasFilter ? signs.length : total;
+  const displayRecords = hasFilter ? total : allRecordsTotal;
+  const displayCities = hasFilter ? totalCities : allCitiesTotal;
 
   const columns: ColumnsType<GroupedRow> = [
     {
@@ -182,8 +200,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
           type="link"
           size="small"
           onClick={() => {
-            const index = tableData.findIndex((item) => item.id === record.id);
-            setCurrentIndex(index >= 0 ? index : 0);
+            const idx = tableData.findIndex((item) => item.id === record.id);
+            setGlobalIndex((page - 1) * pageSize + (idx >= 0 ? idx : 0));
             setSelectedSign(record);
             setDrawerOpen(true);
           }}
@@ -204,19 +222,49 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
     setFormOpen(true);
   };
 
-  const handlePrev = () => {
-    if (currentIndex <= 0) return;
-    const newIndex = currentIndex - 1;
-    setCurrentIndex(newIndex);
-    setSelectedSign(tableData[newIndex]);
-  };
+  const handlePrev = useCallback(async () => {
+    if (globalIndex <= 0) return;
+    const newGlobalIndex = globalIndex - 1;
+    const newPage = Math.floor(newGlobalIndex / pageSize) + 1;
 
-  const handleNext = () => {
-    if (currentIndex >= tableData.length - 1) return;
-    const newIndex = currentIndex + 1;
-    setCurrentIndex(newIndex);
-    setSelectedSign(tableData[newIndex]);
-  };
+    if (newPage !== page) {
+      setPage(newPage);
+      try {
+        const data = await fetchSigns(filterCity, filterMaterial || undefined, newPage, pageSize);
+        const localIdx = newGlobalIndex - (newPage - 1) * pageSize;
+        setGlobalIndex(newGlobalIndex);
+        setSelectedSign(data.items[localIdx] ?? null);
+      } catch {
+        message.error('加载数据失败');
+      }
+    } else {
+      const localIdx = newGlobalIndex - (page - 1) * pageSize;
+      setGlobalIndex(newGlobalIndex);
+      setSelectedSign(tableData[localIdx] ?? null);
+    }
+  }, [globalIndex, page, pageSize, tableData, filterCity, filterMaterial]);
+
+  const handleNext = useCallback(async () => {
+    if (globalIndex >= total - 1) return;
+    const newGlobalIndex = globalIndex + 1;
+    const newPage = Math.floor(newGlobalIndex / pageSize) + 1;
+
+    if (newPage !== page) {
+      setPage(newPage);
+      try {
+        const data = await fetchSigns(filterCity, filterMaterial || undefined, newPage, pageSize);
+        const localIdx = newGlobalIndex - (newPage - 1) * pageSize;
+        setGlobalIndex(newGlobalIndex);
+        setSelectedSign(data.items[localIdx] ?? null);
+      } catch {
+        message.error('加载数据失败');
+      }
+    } else {
+      const localIdx = newGlobalIndex - (page - 1) * pageSize;
+      setGlobalIndex(newGlobalIndex);
+      setSelectedSign(tableData[localIdx] ?? null);
+    }
+  }, [globalIndex, total, page, pageSize, tableData, filterCity, filterMaterial]);
 
   return (
     <>
@@ -254,8 +302,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
 
         <Text type="secondary">
           {hasFilter
-            ? `筛选结果：${displayCount} / ${total} 条记录`
-            : `共 ${displayCount} 条记录`}
+            ? `筛选结果：${displayRecords} 条记录 · ${displayCities} 个城市`
+            : `共 ${displayRecords} 条记录 · ${displayCities} 个城市`}
         </Text>
       </Space>
 
@@ -284,7 +332,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
         open={drawerOpen}
         sign={selectedSign}
         signList={tableData}
-        currentIndex={currentIndex}
+        currentIndex={globalIndex}
+        totalCount={total}
         onClose={() => setDrawerOpen(false)}
         onEdit={(sign) => {
           setDrawerOpen(false);

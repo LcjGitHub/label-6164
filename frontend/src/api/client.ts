@@ -29,10 +29,22 @@ export async function fetchSigns(
   return data;
 }
 
-/** 获取全部路名牌记录（用于下拉选择等场景） */
+/** 获取全部路名牌记录（用于下拉选择等场景），循环分页直至取完 */
 export async function fetchAllSigns(city?: string, material?: string): Promise<StreetSign[]> {
-  const data = await fetchSigns(city, material, 1, 1000);
-  return data.items;
+  const allItems: StreetSign[] = [];
+  let currentPage = 1;
+  const batchSize = 100;
+
+  while (true) {
+    const data = await fetchSigns(city, material, currentPage, batchSize);
+    allItems.push(...data.items);
+    if (allItems.length >= data.total || data.items.length < batchSize) {
+      break;
+    }
+    currentPage += 1;
+  }
+
+  return allItems;
 }
 
 /** 获取单条记录 */

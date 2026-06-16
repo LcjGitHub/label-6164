@@ -88,5 +88,7 @@ class PaginatedResponse(BaseModel):
 
     items: list[StreetSignResponse]
     total: int
+    total_cities: int
     page: int
     page_size: int
+    first_city_continued: bool

@@ -76,18 +76,31 @@ def list_signs(
         query = query.filter(StreetSign.material.contains(material))
 
     total = query.count()
-    items = (
-        query.order_by(StreetSign.city.asc(), StreetSign.id.asc())
-        .offset((page - 1) * page_size)
-        .limit(page_size)
-        .all()
+    total_cities = (
+        query.with_entities(func.count(func.distinct(StreetSign.city))).scalar() or 0
     )
+
+    ordered_query = query.order_by(StreetSign.city.asc(), StreetSign.id.asc())
+    items = ordered_query.offset((page - 1) * page_size).limit(page_size).all()
+
+    first_city_continued = False
+    if page > 1 and items:
+        first_city = items[0].city
+        prev_last = (
+            ordered_query.offset((page - 1) * page_size - 1)
+            .limit(1)
+            .first()
+        )
+        if prev_last and prev_last.city == first_city:
+            first_city_continued = True
 
     return PaginatedResponse(
         items=items,
         total=total,
+        total_cities=total_cities,
         page=page,
         page_size=page_size,
+        first_city_continued=first_city_continued,
     )
 
 

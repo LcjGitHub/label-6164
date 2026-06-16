@@ -57,6 +57,8 @@ export interface CityDirectoryResponse {
 export interface PaginatedResponse<T> {
   items: T[];
   total: number;
+  total_cities: number;
   page: number;
   page_size: number;
+  first_city_continued: boolean;
 }

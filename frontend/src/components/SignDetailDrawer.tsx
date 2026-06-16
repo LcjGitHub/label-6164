@@ -21,6 +21,7 @@ interface SignDetailDrawerProps {
   sign: StreetSign | null;
   signList: StreetSign[];
   currentIndex: number;
+  totalCount: number;
   onClose: () => void;
   onEdit: (sign: StreetSign) => void;
   onDeleted: () => void;
@@ -36,6 +37,7 @@ export default function SignDetailDrawer({
   sign,
   signList,
   currentIndex,
+  totalCount,
   onClose,
   onEdit,
   onDeleted,
@@ -55,8 +57,8 @@ export default function SignDetailDrawer({
   };
 
   const isFirst = currentIndex <= 0;
-  const isLast = signList.length === 0 || currentIndex >= signList.length - 1;
-  const positionText = signList.length > 0 ? `${currentIndex + 1} / ${signList.length}` : '';
+  const isLast = totalCount === 0 || currentIndex >= totalCount - 1;
+  const positionText = totalCount > 0 ? `${currentIndex + 1} / ${totalCount}` : '';
 
   return (
     <Drawer
