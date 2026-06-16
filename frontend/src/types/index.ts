@@ -9,6 +9,16 @@ export interface StreetSign {
   is_unified_standard: boolean;
 }
 
+/** 材质词典记录类型 */
+export interface Material {
+  id: number;
+  name: string;
+  description: string;
+}
+
+/** 创建材质词典字段 */
+export type MaterialPayload = Omit<Material, 'id'>;
+
 /** 创建/更新表单字段 */
 export type StreetSignPayload = Omit<StreetSign, 'id'>;
 

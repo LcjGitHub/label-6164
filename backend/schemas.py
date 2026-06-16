@@ -46,3 +46,22 @@ class StatsOverview(BaseModel):
     total_unified: int
     overall_unified_rate: float
     city_stats: list[CityStats]
+
+
+class MaterialBase(BaseModel):
+    """材质词典公共字段。"""
+
+    name: str = Field(..., min_length=1, max_length=64, description="材质名称")
+    description: str = Field(..., min_length=1, max_length=256, description="材质说明")
+
+
+class MaterialCreate(MaterialBase):
+    """创建材质词典记录。"""
+
+
+class MaterialResponse(MaterialBase):
+    """材质词典响应。"""
+
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int

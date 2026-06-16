@@ -1,8 +1,8 @@
-import { Form, Input, Modal, Switch, message } from 'antd';
-import { useEffect, useMemo } from 'react';
+import { Form, Input, Modal, Select, Switch, message } from 'antd';
+import { useEffect, useMemo, useState } from 'react';
 
-import { createSign, updateSign } from '../api/client';
-import type { StreetSign, StreetSignPayload } from '../types';
+import { createSign, fetchMaterials, updateSign } from '../api/client';
+import type { Material, StreetSign, StreetSignPayload } from '../types';
 import StreetSignPreview from './StreetSignPreview';
 
 interface SignFormModalProps {
@@ -24,6 +24,8 @@ export default function SignFormModal({
   const [form] = Form.useForm<StreetSignPayload>();
   const isEdit = sign !== null;
 
+  const [materials, setMaterials] = useState<Material[]>([]);
+
   const bgColor = Form.useWatch('background_color', form);
   const fontDesc = Form.useWatch('font_description', form);
   const cityValue = Form.useWatch('city', form);
@@ -34,6 +36,7 @@ export default function SignFormModal({
 
   useEffect(() => {
     if (open) {
+      fetchMaterials().then(setMaterials).catch(() => message.error('加载材质词典失败'));
       if (sign) {
         form.setFieldsValue(sign);
       } else {
@@ -109,9 +112,17 @@ export default function SignFormModal({
         <Form.Item
           name="material"
           label="材质"
-          rules={[{ required: true, message: '请输入材质' }]}
+          rules={[{ required: true, message: '请选择材质' }]}
         >
-          <Input placeholder="如：搪瓷、铝合金" maxLength={64} />
+          <Select
+            showSearch
+            placeholder="请搜索或选择材质"
+            optionFilterProp="label"
+            options={materials.map((m) => ({
+              value: m.name,
+              label: m.name,
+            }))}
+          />
         </Form.Item>
         <Form.Item
           name="is_unified_standard"

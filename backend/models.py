@@ -17,3 +17,13 @@ class StreetSign(Base):
     background_color: Mapped[str] = mapped_column(String(32), nullable=False)
     material: Mapped[str] = mapped_column(String(64), nullable=False)
     is_unified_standard: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+
+
+class Material(Base):
+    """材质词典。"""
+
+    __tablename__ = "materials"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True)
+    name: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    description: Mapped[str] = mapped_column(String(256), nullable=False)

@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import type { StatsOverview, StreetSign, StreetSignPayload } from '../types';
+import type { Material, MaterialPayload, StatsOverview, StreetSign, StreetSignPayload } from '../types';
 
 const client = axios.create({
   baseURL: '/api',
@@ -42,5 +42,17 @@ export async function deleteSign(id: number): Promise<void> {
 /** 获取统计概览 */
 export async function fetchStatsOverview(): Promise<StatsOverview> {
   const { data } = await client.get<StatsOverview>('/stats/overview');
+  return data;
+}
+
+/** 获取全部材质词典记录 */
+export async function fetchMaterials(): Promise<Material[]> {
+  const { data } = await client.get<Material[]>('/materials');
+  return data;
+}
+
+/** 新增材质词典记录 */
+export async function createMaterial(payload: MaterialPayload): Promise<Material> {
+  const { data } = await client.post<Material>('/materials', payload);
   return data;
 }

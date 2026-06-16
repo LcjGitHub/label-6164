@@ -2,7 +2,7 @@
 
 from sqlalchemy.orm import Session
 
-from models import StreetSign
+from models import Material, StreetSign
 
 SEED_DATA: list[dict] = [
     {
@@ -42,12 +42,44 @@ SEED_DATA: list[dict] = [
     },
 ]
 
+MATERIAL_SEED_DATA: list[dict] = [
+    {
+        "name": "搪瓷",
+        "description": "传统工艺，色彩鲜艳耐久，常见于建国初期老式路牌",
+    },
+    {
+        "name": "铝合金",
+        "description": "轻质耐候金属，现代标准化路牌常用材质",
+    },
+    {
+        "name": "亚克力",
+        "description": "有机玻璃质感，透光性好，多用于商业街区标识",
+    },
+    {
+        "name": "木质",
+        "description": "自然纹理，历史文化街区特色路牌常用",
+    },
+    {
+        "name": "不锈钢",
+        "description": "高耐候性金属，沿海多雨城市广泛使用",
+    },
+    {
+        "name": "塑料",
+        "description": "成本低廉，临时性或社区路牌常见材质",
+    },
+]
+
 
 def seed_database(db: Session) -> None:
     """
      * 若表为空则写入种子数据。
      * @param {Session} db 数据库会话
      """
+    if db.query(Material).count() == 0:
+        for item in MATERIAL_SEED_DATA:
+            db.add(Material(**item))
+        db.commit()
+
     if db.query(StreetSign).count() > 0:
         return
     for item in SEED_DATA:

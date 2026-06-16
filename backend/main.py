@@ -8,9 +8,11 @@ from sqlalchemy import Integer, func
 from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
-from models import StreetSign
+from models import Material, StreetSign
 from schemas import (
     CityStats,
+    MaterialCreate,
+    MaterialResponse,
     StatsOverview,
     StreetSignCreate,
     StreetSignResponse,
@@ -101,6 +103,25 @@ def delete_sign(sign_id: int, db: DbSession) -> None:
         raise HTTPException(status_code=404, detail="记录不存在")
     db.delete(sign)
     db.commit()
+
+
+@app.get("/api/materials", response_model=list[MaterialResponse])
+def list_materials(db: DbSession) -> list[Material]:
+    """获取全部材质词典记录。"""
+    return db.query(Material).order_by(Material.id.asc()).all()
+
+
+@app.post("/api/materials", response_model=MaterialResponse, status_code=201)
+def create_material(payload: MaterialCreate, db: DbSession) -> Material:
+    """新增材质词典记录。"""
+    existing = db.query(Material).filter(Material.name == payload.name).first()
+    if existing is not None:
+        raise HTTPException(status_code=409, detail="该材质名称已存在")
+    material = Material(**payload.model_dump())
+    db.add(material)
+    db.commit()
+    db.refresh(material)
+    return material
 
 
 @app.get("/api/stats/overview", response_model=StatsOverview)
