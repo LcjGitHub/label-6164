@@ -27,3 +27,22 @@ class StreetSignResponse(StreetSignBase):
     model_config = ConfigDict(from_attributes=True)
 
     id: int
+
+
+class CityStats(BaseModel):
+    """单个城市的统计数据。"""
+
+    city: str
+    total_count: int
+    unified_count: int
+    unified_rate: float
+
+
+class StatsOverview(BaseModel):
+    """统计概览数据。"""
+
+    total_cities: int
+    total_records: int
+    total_unified: int
+    overall_unified_rate: float
+    city_stats: list[CityStats]

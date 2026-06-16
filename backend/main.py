@@ -4,11 +4,18 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from sqlalchemy import Integer, func
 from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
 from models import StreetSign
-from schemas import StreetSignCreate, StreetSignResponse, StreetSignUpdate
+from schemas import (
+    CityStats,
+    StatsOverview,
+    StreetSignCreate,
+    StreetSignResponse,
+    StreetSignUpdate,
+)
 from seed import seed_database
 
 Base.metadata.create_all(bind=engine)
@@ -94,3 +101,58 @@ def delete_sign(sign_id: int, db: DbSession) -> None:
         raise HTTPException(status_code=404, detail="记录不存在")
     db.delete(sign)
     db.commit()
+
+
+@app.get("/api/stats/overview", response_model=StatsOverview)
+def get_stats_overview(db: DbSession) -> StatsOverview:
+    """获取统计概览：按城市汇总记录数量与规范率。"""
+    total_records = db.query(func.count(StreetSign.id)).scalar() or 0
+    total_unified = (
+        db.query(func.count(StreetSign.id))
+        .filter(StreetSign.is_unified_standard.is_(True))
+        .scalar()
+        or 0
+    )
+    total_cities = (
+        db.query(func.count(func.distinct(StreetSign.city))).scalar() or 0
+    )
+
+    city_stats_query = (
+        db.query(
+            StreetSign.city,
+            func.count(StreetSign.id).label("total_count"),
+            func.sum(func.cast(StreetSign.is_unified_standard, Integer)).label(
+                "unified_count"
+            ),
+        )
+        .group_by(StreetSign.city)
+        .order_by(StreetSign.city.asc())
+        .all()
+    )
+
+    city_stats: list[CityStats] = []
+    for city, total_count, unified_count in city_stats_query:
+        unified_count = unified_count or 0
+        unified_rate = (
+            round(unified_count / total_count, 4) if total_count > 0 else 0.0
+        )
+        city_stats.append(
+            CityStats(
+                city=city,
+                total_count=total_count,
+                unified_count=unified_count,
+                unified_rate=unified_rate,
+            )
+        )
+
+    overall_unified_rate = (
+        round(total_unified / total_records, 4) if total_records > 0 else 0.0
+    )
+
+    return StatsOverview(
+        total_cities=total_cities,
+        total_records=total_records,
+        total_unified=total_unified,
+        overall_unified_rate=overall_unified_rate,
+        city_stats=city_stats,
+    )

@@ -11,3 +11,20 @@ export interface StreetSign {
 
 /** 创建/更新表单字段 */
 export type StreetSignPayload = Omit<StreetSign, 'id'>;
+
+/** 单个城市统计数据 */
+export interface CityStats {
+  city: string;
+  total_count: number;
+  unified_count: number;
+  unified_rate: number;
+}
+
+/** 统计概览数据 */
+export interface StatsOverview {
+  total_cities: number;
+  total_records: number;
+  total_unified: number;
+  overall_unified_rate: number;
+  city_stats: CityStats[];
+}

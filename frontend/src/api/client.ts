@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-import type { StreetSign, StreetSignPayload } from '../types';
+import type { StatsOverview, StreetSign, StreetSignPayload } from '../types';
 
 const client = axios.create({
   baseURL: '/api',
@@ -37,4 +37,10 @@ export async function updateSign(
 /** 删除记录 */
 export async function deleteSign(id: number): Promise<void> {
   await client.delete(`/signs/${id}`);
+}
+
+/** 获取统计概览 */
+export async function fetchStatsOverview(): Promise<StatsOverview> {
+  const { data } = await client.get<StatsOverview>('/stats/overview');
+  return data;
 }
