@@ -93,6 +93,16 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
 
   const tableData = useMemo(() => buildGroupedRows(signs), [signs]);
 
+  useEffect(() => {
+    if (!drawerOpen || !selectedSign) return;
+    const newIndex = tableData.findIndex((item) => item.id === selectedSign.id);
+    if (newIndex >= 0) {
+      setCurrentIndex(newIndex);
+    } else {
+      setDrawerOpen(false);
+    }
+  }, [tableData]);
+
   const cityCount = useMemo(
     () => new Set(signs.map((item) => item.city)).size,
     [signs],
