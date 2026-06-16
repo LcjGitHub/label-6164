@@ -76,3 +76,5 @@ cd frontend && npm install && npm run dev
 | POST | `/api/signs` | 创建 |
 | PUT | `/api/signs/{id}` | 更新 |
 | DELETE | `/api/signs/{id}` | 删除 |
+| GET | `/api/materials` | 获取材质词典列表 |
+| POST | `/api/materials` | 新增材质词典 |
