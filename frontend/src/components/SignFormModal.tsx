@@ -1,8 +1,9 @@
 import { Form, Input, Modal, Switch, message } from 'antd';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { createSign, updateSign } from '../api/client';
 import type { StreetSign, StreetSignPayload } from '../types';
+import StreetSignPreview from './StreetSignPreview';
 
 interface SignFormModalProps {
   open: boolean;
@@ -22,6 +23,14 @@ export default function SignFormModal({
 }: SignFormModalProps) {
   const [form] = Form.useForm<StreetSignPayload>();
   const isEdit = sign !== null;
+
+  const bgColor = Form.useWatch('background_color', form);
+  const fontDesc = Form.useWatch('font_description', form);
+  const cityValue = Form.useWatch('city', form);
+
+  const previewBgColor = useMemo(() => bgColor || sign?.background_color || '', [bgColor, sign]);
+  const previewFontDesc = useMemo(() => fontDesc || sign?.font_description || '', [fontDesc, sign]);
+  const previewCity = useMemo(() => cityValue || sign?.city || '', [cityValue, sign]);
 
   useEffect(() => {
     if (open) {
@@ -65,6 +74,17 @@ export default function SignFormModal({
       cancelText="取消"
     >
       <Form form={form} layout="vertical" style={{ marginTop: 16 }}>
+        <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#666' }}>
+            实时预览
+          </div>
+          <StreetSignPreview
+            backgroundColor={previewBgColor}
+            fontDescription={previewFontDesc}
+            city={previewCity}
+            height={100}
+          />
+        </div>
         <Form.Item
           name="city"
           label="城市"

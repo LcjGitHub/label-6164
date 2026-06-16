@@ -11,6 +11,7 @@ import dayjs from 'dayjs';
 
 import { deleteSign } from '../api/client';
 import type { StreetSign } from '../types';
+import StreetSignPreview from './StreetSignPreview';
 
 interface SignDetailDrawerProps {
   open: boolean;
@@ -62,7 +63,19 @@ export default function SignDetailDrawer({
       }
     >
       {sign ? (
-        <Descriptions column={1} bordered size="small">
+        <>
+          <div style={{ marginBottom: 16 }}>
+            <div style={{ marginBottom: 8, fontSize: 14, fontWeight: 500, color: '#666' }}>
+              路名牌样例预览
+            </div>
+            <StreetSignPreview
+              backgroundColor={sign.background_color}
+              fontDescription={sign.font_description}
+              city={sign.city}
+              height={110}
+            />
+          </div>
+          <Descriptions column={1} bordered size="small">
           <Descriptions.Item label="城市">{sign.city}</Descriptions.Item>
           <Descriptions.Item label="字体描述">{sign.font_description}</Descriptions.Item>
           <Descriptions.Item label="背景色">
@@ -91,7 +104,8 @@ export default function SignDetailDrawer({
           <Descriptions.Item label="浏览时间">
             {dayjs().format('YYYY-MM-DD HH:mm')}
           </Descriptions.Item>
-        </Descriptions>
+          </Descriptions>
+        </>
       ) : null}
     </Drawer>
   );
