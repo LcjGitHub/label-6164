@@ -226,6 +226,12 @@ export default function SignFormModal({
             />
           </Form.Item>
           <Form.Item
+            name="discovery_decade"
+            label="发现年代"
+          >
+            <Input placeholder="如：二十世纪八十年代（选填）" maxLength={64} allowClear />
+          </Form.Item>
+          <Form.Item
             name="is_unified_standard"
             label="是否统一规范"
             valuePropName="checked"

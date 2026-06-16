@@ -149,6 +149,14 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
       width: 100,
     },
     {
+      title: '发现年代',
+      dataIndex: 'discovery_decade',
+      width: 130,
+      render: (value: string | null) => (
+        <Tag color="purple">{value || '-'}</Tag>
+      ),
+    },
+    {
       title: '统一规范',
       dataIndex: 'is_unified_standard',
       width: 100,

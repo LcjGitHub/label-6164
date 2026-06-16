@@ -17,6 +17,7 @@ class StreetSign(Base):
     background_color: Mapped[str] = mapped_column(String(32), nullable=False)
     material: Mapped[str] = mapped_column(String(64), nullable=False)
     is_unified_standard: Mapped[bool] = mapped_column(Boolean, nullable=False, default=False)
+    discovery_decade: Mapped[str | None] = mapped_column(String(64), nullable=True)
 
 
 class Material(Base):

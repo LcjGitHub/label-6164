@@ -4,7 +4,7 @@ from typing import Annotated
 
 from fastapi import Depends, FastAPI, HTTPException, Query
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy import Integer, func
+from sqlalchemy import Integer, func, text
 from sqlalchemy.orm import Session
 
 from database import Base, engine, get_db
@@ -22,6 +22,12 @@ from schemas import (
 from seed import seed_database
 
 Base.metadata.create_all(bind=engine)
+
+with engine.begin() as conn:
+    result = conn.execute(text("PRAGMA table_info(street_signs)"))
+    columns = [row[1] for row in result]
+    if "discovery_decade" not in columns:
+        conn.execute(text("ALTER TABLE street_signs ADD COLUMN discovery_decade VARCHAR(64)"))
 
 app = FastAPI(title="老式路名牌字体图鉴", version="1.0.0")
 

@@ -11,6 +11,7 @@ class StreetSignBase(BaseModel):
     background_color: str = Field(..., min_length=1, max_length=32, description="背景色")
     material: str = Field(..., min_length=1, max_length=64, description="材质")
     is_unified_standard: bool = Field(..., description="是否统一规范")
+    discovery_decade: str | None = Field(None, max_length=64, description="发现年代")
 
 
 class StreetSignCreate(StreetSignBase):

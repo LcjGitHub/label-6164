@@ -125,6 +125,13 @@ export default function SignDetailDrawer({
             </Space>
           </Descriptions.Item>
           <Descriptions.Item label="材质">{sign.material}</Descriptions.Item>
+          <Descriptions.Item label="发现年代">
+            {sign.discovery_decade ? (
+              <Tag color="purple">{sign.discovery_decade}</Tag>
+            ) : (
+              <span style={{ color: '#999' }}>-</span>
+            )}
+          </Descriptions.Item>
           <Descriptions.Item label="是否统一规范">
             <Tag color={sign.is_unified_standard ? 'green' : 'orange'}>
               {sign.is_unified_standard ? '是' : '否'}

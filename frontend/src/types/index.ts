@@ -7,6 +7,7 @@ export interface StreetSign {
   background_color: string;
   material: string;
   is_unified_standard: boolean;
+  discovery_decade: string | null;
 }
 
 /** 材质词典记录类型 */

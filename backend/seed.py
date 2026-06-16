@@ -11,6 +11,7 @@ SEED_DATA: list[dict] = [
         "background_color": "#1E4D8C",
         "material": "搪瓷",
         "is_unified_standard": True,
+        "discovery_decade": "二十世纪八十年代",
     },
     {
         "city": "北京",
@@ -18,6 +19,7 @@ SEED_DATA: list[dict] = [
         "background_color": "#2B5F3E",
         "material": "铝合金",
         "is_unified_standard": False,
+        "discovery_decade": "二十世纪九十年代",
     },
     {
         "city": "上海",
@@ -25,6 +27,7 @@ SEED_DATA: list[dict] = [
         "background_color": "#006633",
         "material": "搪瓷",
         "is_unified_standard": True,
+        "discovery_decade": "二十世纪七十年代",
     },
     {
         "city": "广州",
@@ -32,6 +35,7 @@ SEED_DATA: list[dict] = [
         "background_color": "#F5F0E6",
         "material": "亚克力",
         "is_unified_standard": False,
+        "discovery_decade": "二十世纪六十年代",
     },
     {
         "city": "成都",
@@ -39,6 +43,7 @@ SEED_DATA: list[dict] = [
         "background_color": "#8B4513",
         "material": "木质",
         "is_unified_standard": False,
+        "discovery_decade": "二十世纪五十年代",
     },
 ]
 
