@@ -14,6 +14,7 @@ from schemas import (
     CityStats,
     MaterialCreate,
     MaterialResponse,
+    PaginatedResponse,
     StatsOverview,
     StreetSignCreate,
     StreetSignResponse,
@@ -59,19 +60,35 @@ def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@app.get("/api/signs", response_model=list[StreetSignResponse])
+@app.get("/api/signs", response_model=PaginatedResponse)
 def list_signs(
     db: DbSession,
     city: str | None = Query(None, description="按城市名称筛选"),
     material: str | None = Query(None, description="按材质关键词模糊筛选"),
-) -> list[StreetSign]:
-    """获取全部路名牌记录，按城市、ID 排序。"""
+    page: int = Query(1, ge=1, description="页码，从1开始"),
+    page_size: int = Query(10, ge=1, le=100, description="每页条数，默认10条"),
+) -> PaginatedResponse:
+    """获取路名牌记录，支持分页，按城市、ID 排序。"""
     query = db.query(StreetSign)
     if city:
         query = query.filter(StreetSign.city == city)
     if material:
         query = query.filter(StreetSign.material.contains(material))
-    return query.order_by(StreetSign.city.asc(), StreetSign.id.asc()).all()
+
+    total = query.count()
+    items = (
+        query.order_by(StreetSign.city.asc(), StreetSign.id.asc())
+        .offset((page - 1) * page_size)
+        .limit(page_size)
+        .all()
+    )
+
+    return PaginatedResponse(
+        items=items,
+        total=total,
+        page=page,
+        page_size=page_size,
+    )
 
 
 @app.get("/api/signs/{sign_id}", response_model=StreetSignResponse)

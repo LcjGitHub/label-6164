@@ -1,7 +1,7 @@
 import { Alert, Col, Row, Select, Spin, Typography, message } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 
-import { fetchSigns, fetchSignsForComparison } from '../api/client';
+import { fetchAllSigns, fetchSignsForComparison } from '../api/client';
 import ComparisonDisplay from '../components/ComparisonDisplay';
 import type { StreetSign } from '../types';
 
@@ -20,7 +20,7 @@ export default function ComparisonPage() {
   const loadSignList = useCallback(async () => {
     setListLoading(true);
     try {
-      const data = await fetchSigns();
+      const data = await fetchAllSigns();
       setSignList(data);
     } catch {
       message.error('加载记录列表失败，请确认后端已启动');

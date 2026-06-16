@@ -45,6 +45,9 @@ function buildGroupedRows(signs: StreetSign[]): GroupedRow[] {
 
 export default function SignListPage({ initialCity }: SignListPageProps) {
   const [signs, setSigns] = useState<StreetSign[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [loading, setLoading] = useState(false);
   const [selectedSign, setSelectedSign] = useState<StreetSign | null>(null);
   const [currentIndex, setCurrentIndex] = useState(0);
@@ -70,14 +73,15 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
   const loadSigns = useCallback(async () => {
     setLoading(true);
     try {
-      const data = await fetchSigns(filterCity, filterMaterial || undefined);
-      setSigns(data);
+      const data = await fetchSigns(filterCity, filterMaterial || undefined, page, pageSize);
+      setSigns(data.items);
+      setTotal(data.total);
     } catch {
       message.error('加载数据失败，请确认后端已启动');
     } finally {
       setLoading(false);
     }
-  }, [filterCity, filterMaterial]);
+  }, [filterCity, filterMaterial, page, pageSize]);
 
   useEffect(() => {
     loadSigns();
@@ -89,7 +93,12 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
     setFilterCity(undefined);
     setMaterialInput('');
     setFilterMaterial('');
+    setPage(1);
   };
+
+  useEffect(() => {
+    setPage(1);
+  }, [filterCity, filterMaterial]);
 
   const tableData = useMemo(() => buildGroupedRows(signs), [signs]);
 
@@ -103,10 +112,7 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
     }
   }, [tableData]);
 
-  const cityCount = useMemo(
-    () => new Set(signs.map((item) => item.city)).size,
-    [signs],
-  );
+  const displayCount = hasFilter ? signs.length : total;
 
   const columns: ColumnsType<GroupedRow> = [
     {
@@ -248,8 +254,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
 
         <Text type="secondary">
           {hasFilter
-            ? `筛选结果：${signs.length} 条记录${signs.length > 0 ? ` · ${cityCount} 个城市` : ''}`
-            : `共 ${signs.length} 条记录 · ${cityCount} 个城市`}
+            ? `筛选结果：${displayCount} / ${total} 条记录`
+            : `共 ${displayCount} 条记录`}
         </Text>
       </Space>
 
@@ -258,7 +264,18 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
         columns={columns}
         dataSource={tableData}
         loading={loading}
-        pagination={false}
+        pagination={{
+          current: page,
+          pageSize,
+          total,
+          showSizeChanger: true,
+          showQuickJumper: true,
+          showTotal: (t) => `共 ${t} 条`,
+          onChange: (p, ps) => {
+            setPage(p);
+            setPageSize(ps);
+          },
+        }}
         bordered
         size="middle"
       />

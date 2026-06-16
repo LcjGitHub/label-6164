@@ -4,6 +4,7 @@ import type {
   CityDirectoryResponse,
   Material,
   MaterialPayload,
+  PaginatedResponse,
   StatsOverview,
   StreetSign,
   StreetSignPayload,
@@ -14,13 +15,24 @@ const client = axios.create({
   timeout: 10000,
 });
 
-/** 获取全部路名牌记录，可按城市和材质筛选 */
-export async function fetchSigns(city?: string, material?: string): Promise<StreetSign[]> {
-  const params: Record<string, string> = {};
+/** 获取路名牌记录，支持分页，可按城市和材质筛选 */
+export async function fetchSigns(
+  city?: string,
+  material?: string,
+  page: number = 1,
+  pageSize: number = 10,
+): Promise<PaginatedResponse<StreetSign>> {
+  const params: Record<string, string | number> = { page, page_size: pageSize };
   if (city) params.city = city;
   if (material) params.material = material;
-  const { data } = await client.get<StreetSign[]>('/signs', { params });
+  const { data } = await client.get<PaginatedResponse<StreetSign>>('/signs', { params });
   return data;
+}
+
+/** 获取全部路名牌记录（用于下拉选择等场景） */
+export async function fetchAllSigns(city?: string, material?: string): Promise<StreetSign[]> {
+  const data = await fetchSigns(city, material, 1, 1000);
+  return data.items;
 }
 
 /** 获取单条记录 */

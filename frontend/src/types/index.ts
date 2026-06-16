@@ -52,3 +52,11 @@ export interface CityDirectoryResponse {
   total_records: number;
   cities: CityDirectoryItem[];
 }
+
+/** 分页响应 */
+export interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  page: number;
+  page_size: number;
+}

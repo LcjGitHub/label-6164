@@ -81,3 +81,12 @@ class CityDirectoryResponse(BaseModel):
     total_cities: int
     total_records: int
     cities: list[CityDirectoryItem]
+
+
+class PaginatedResponse(BaseModel):
+    """分页响应。"""
+
+    items: list[StreetSignResponse]
+    total: int
+    page: int
+    page_size: int
