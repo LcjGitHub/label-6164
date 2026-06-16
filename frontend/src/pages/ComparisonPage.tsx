@@ -1,7 +1,7 @@
-import { Col, Row, Select, Spin, Typography, message } from 'antd';
+import { Alert, Col, Row, Select, Spin, Typography, message } from 'antd';
 import { useCallback, useEffect, useState } from 'react';
 
-import { fetchSign, fetchSigns } from '../api/client';
+import { fetchSigns, fetchSignsForComparison } from '../api/client';
 import ComparisonDisplay from '../components/ComparisonDisplay';
 import type { StreetSign } from '../types';
 
@@ -13,8 +13,7 @@ export default function ComparisonPage() {
   const [listLoading, setListLoading] = useState(false);
   const [signA, setSignA] = useState<StreetSign | null>(null);
   const [signB, setSignB] = useState<StreetSign | null>(null);
-  const [loadingA, setLoadingA] = useState(false);
-  const [loadingB, setLoadingB] = useState(false);
+  const [loading, setLoading] = useState(false);
   const [selectedA, setSelectedA] = useState<number | null>(null);
   const [selectedB, setSelectedB] = useState<number | null>(null);
 
@@ -34,39 +33,58 @@ export default function ComparisonPage() {
     loadSignList();
   }, [loadSignList]);
 
-  const handleSelectA = async (id: number | null) => {
+  const handleSelectA = (id: number | null) => {
     setSelectedA(id);
     if (!id) {
       setSignA(null);
-      return;
-    }
-    setLoadingA(true);
-    try {
-      const data = await fetchSign(id);
-      setSignA(data);
-    } catch {
-      message.error('加载记录详情失败');
-    } finally {
-      setLoadingA(false);
     }
   };
 
-  const handleSelectB = async (id: number | null) => {
+  const handleSelectB = (id: number | null) => {
     setSelectedB(id);
     if (!id) {
       setSignB(null);
-      return;
-    }
-    setLoadingB(true);
-    try {
-      const data = await fetchSign(id);
-      setSignB(data);
-    } catch {
-      message.error('加载记录详情失败');
-    } finally {
-      setLoadingB(false);
     }
   };
+
+  useEffect(() => {
+    if (!selectedA || !selectedB) {
+      if (!selectedA) setSignA(null);
+      if (!selectedB) setSignB(null);
+      return;
+    }
+
+    if (selectedA === selectedB) {
+      return;
+    }
+
+    let cancelled = false;
+    setLoading(true);
+    fetchSignsForComparison(selectedA, selectedB)
+      .then(([a, b]) => {
+        if (!cancelled) {
+          setSignA(a);
+          setSignB(b);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) {
+          message.error('加载记录详情失败');
+        }
+      })
+      .finally(() => {
+        if (!cancelled) {
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedA, selectedB]);
+
+  const isSameRecord = selectedA !== null && selectedB !== null && selectedA === selectedB;
+  const canCompare = selectedA !== null && selectedB !== null && !isSameRecord;
 
   return (
     <div>
@@ -85,11 +103,11 @@ export default function ComparisonPage() {
         <Row gutter={24} align="middle">
           <Col span={12}>
             <div style={{ marginBottom: 8, fontWeight: 500 }}>
-              选择记录 A
+              选择记录甲
             </div>
             <Select
               style={{ width: '100%' }}
-              placeholder="请选择第一条路名牌记录"
+              placeholder="请选择记录甲"
               loading={listLoading}
               value={selectedA}
               onChange={handleSelectA}
@@ -106,11 +124,11 @@ export default function ComparisonPage() {
           </Col>
           <Col span={12}>
             <div style={{ marginBottom: 8, fontWeight: 500 }}>
-              选择记录 B
+              选择记录乙
             </div>
             <Select
               style={{ width: '100%' }}
-              placeholder="请选择第二条路名牌记录"
+              placeholder="请选择记录乙"
               loading={listLoading}
               value={selectedB}
               onChange={handleSelectB}
@@ -128,8 +146,23 @@ export default function ComparisonPage() {
         </Row>
       </div>
 
-      <Spin spinning={loadingA || loadingB}>
-        <ComparisonDisplay signA={signA} signB={signB} />
+      {isSameRecord && (
+        <Alert
+          type="warning"
+          showIcon
+          message="记录甲与记录乙不能为同一条记录，请重新选择。"
+          style={{ marginBottom: 16 }}
+        />
+      )}
+
+      <Spin spinning={loading}>
+        {canCompare ? (
+          <ComparisonDisplay signA={signA} signB={signB} />
+        ) : (
+          !isSameRecord && (
+            <ComparisonDisplay signA={signA} signB={signB} />
+          )
+        )}
       </Spin>
     </div>
   );

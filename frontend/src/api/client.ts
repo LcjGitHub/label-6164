@@ -45,6 +45,18 @@ export async function fetchStatsOverview(): Promise<StatsOverview> {
   return data;
 }
 
+/** 双记录并行查询（对比页专用） */
+export async function fetchSignsForComparison(
+  idA: number,
+  idB: number,
+): Promise<[StreetSign, StreetSign]> {
+  const [resA, resB] = await Promise.all([
+    client.get<StreetSign>(`/signs/${idA}`),
+    client.get<StreetSign>(`/signs/${idB}`),
+  ]);
+  return [resA.data, resB.data];
+}
+
 /** 获取全部材质词典记录 */
 export async function fetchMaterials(): Promise<Material[]> {
   const { data } = await client.get<Material[]>('/materials');

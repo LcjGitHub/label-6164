@@ -124,12 +124,14 @@ export function extractStreetName(fontDescription: string, city: string): string
         const trimmed = seg.trim();
         const idx = trimmed.lastIndexOf(suffix);
         if (idx === -1) continue;
+        if (idx === 0) continue;
         const end = idx + suffix.length;
         let start = idx;
         while (start > 0 && /[\u4e00-\u9fff]/.test(trimmed[start - 1])) {
           start--;
         }
         const name = trimmed.slice(start, end);
+        if (name === suffix) continue;
         if (name.length >= 2 && name.length <= 10) {
           return name;
         }

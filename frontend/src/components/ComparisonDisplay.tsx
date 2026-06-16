@@ -2,7 +2,7 @@ import { Col, Row, Space, Tag, Typography } from 'antd';
 import type { StreetSign } from '../types';
 import StreetSignPreview from './StreetSignPreview';
 
-const { Text, Title } = Typography;
+const { Text } = Typography;
 
 interface ComparisonDisplayProps {
   signA: StreetSign | null;
@@ -47,11 +47,6 @@ const FIELD_CONFIGS: FieldConfig[] = [
       </Tag>
     ),
   },
-  {
-    key: 'id',
-    label: '记录编号',
-    render: (value) => <Text code>#{value as number}</Text>,
-  },
 ];
 
 function isDifferent(
@@ -86,26 +81,33 @@ export default function ComparisonDisplay({
 
   return (
     <div>
-      <Row gutter={24} style={{ marginBottom: 24 }}>
+      <Row gutter={24} style={{ marginBottom: 16 }}>
         <Col span={12}>
           <div
             style={{
               border: '1px solid #e8e8e8',
-              borderRadius: 8,
-              padding: 16,
+              borderRadius: 6,
+              padding: 8,
               height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
             }}
           >
-            <Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>
-              {signA ? `${signA.city} · #${signA.id}` : '请选择左侧记录'}
-            </Title>
-            {signA && (
-              <StreetSignPreview
-                backgroundColor={signA.background_color}
-                fontDescription={signA.font_description}
-                city={signA.city}
-                height={110}
-              />
+            {signA ? (
+              <>
+                <StreetSignPreview
+                  backgroundColor={signA.background_color}
+                  fontDescription={signA.font_description}
+                  city={signA.city}
+                  height={44}
+                />
+                <Text strong>
+                  {signA.city} · #{signA.id}
+                </Text>
+              </>
+            ) : (
+              <Text type="secondary">请选择记录甲</Text>
             )}
           </div>
         </Col>
@@ -113,21 +115,28 @@ export default function ComparisonDisplay({
           <div
             style={{
               border: '1px solid #e8e8e8',
-              borderRadius: 8,
-              padding: 16,
+              borderRadius: 6,
+              padding: 8,
               height: '100%',
+              display: 'flex',
+              alignItems: 'center',
+              gap: 12,
             }}
           >
-            <Title level={5} style={{ marginTop: 0, marginBottom: 16 }}>
-              {signB ? `${signB.city} · #${signB.id}` : '请选择右侧记录'}
-            </Title>
-            {signB && (
-              <StreetSignPreview
-                backgroundColor={signB.background_color}
-                fontDescription={signB.font_description}
-                city={signB.city}
-                height={110}
-              />
+            {signB ? (
+              <>
+                <StreetSignPreview
+                  backgroundColor={signB.background_color}
+                  fontDescription={signB.font_description}
+                  city={signB.city}
+                  height={44}
+                />
+                <Text strong>
+                  {signB.city} · #{signB.id}
+                </Text>
+              </>
+            ) : (
+              <Text type="secondary">请选择记录乙</Text>
             )}
           </div>
         </Col>
@@ -163,10 +172,10 @@ export default function ComparisonDisplay({
               borderRight: '1px solid #e8e8e8',
             }}
           >
-            记录 A
+            记录甲
           </Col>
           <Col span={8} style={{ padding: '12px 16px' }}>
-            记录 B
+            记录乙
           </Col>
         </Row>
 
