@@ -52,6 +52,7 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
   const [editingSign, setEditingSign] = useState<StreetSign | null>(null);
 
   const [filterCity, setFilterCity] = useState<string | undefined>(initialCity);
+  const [materialInput, setMaterialInput] = useState<string>('');
   const [filterMaterial, setFilterMaterial] = useState<string>('');
   const [cityOptions, setCityOptions] = useState<CityDirectoryItem[]>([]);
 
@@ -60,6 +61,10 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
       .then((res) => setCityOptions(res.cities))
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    setFilterCity(initialCity);
+  }, [initialCity]);
 
   const loadSigns = useCallback(async () => {
     setLoading(true);
@@ -81,6 +86,7 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
 
   const clearFilters = () => {
     setFilterCity(undefined);
+    setMaterialInput('');
     setFilterMaterial('');
   };
 
@@ -191,8 +197,8 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
           placeholder="材质关键词"
           allowClear
           style={{ width: 180 }}
-          value={filterMaterial}
-          onChange={(e) => setFilterMaterial(e.target.value)}
+          value={materialInput}
+          onChange={(e) => setMaterialInput(e.target.value)}
           onSearch={(value) => setFilterMaterial(value)}
         />
 
@@ -203,7 +209,9 @@ export default function SignListPage({ initialCity }: SignListPageProps) {
         )}
 
         <Text type="secondary">
-          筛选结果：{signs.length} 条记录{signs.length > 0 ? ` · ${cityCount} 个城市` : ''}
+          {hasFilter
+            ? `筛选结果：${signs.length} 条记录${signs.length > 0 ? ` · ${cityCount} 个城市` : ''}`
+            : `共 ${signs.length} 条记录 · ${cityCount} 个城市`}
         </Text>
       </Space>
 
